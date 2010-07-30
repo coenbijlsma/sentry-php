@@ -16,6 +16,12 @@ class Listener extends PluginCommand {
     private $socket;
 
     /**
+     *
+     * @var array
+     */
+    private $messageBuffer;
+
+    /**
      * Constructor
      * @param Plugin $plugin
      * @param array $config
@@ -24,6 +30,7 @@ class Listener extends PluginCommand {
     public function __construct( Plugin &$plugin, array $config, Socket &$socket ) {
         parent::__construct( $plugin, $config );
         $this->socket =& $socket;
+        $this->messageBuffer = array();
     }
 
     /**
@@ -33,8 +40,9 @@ class Listener extends PluginCommand {
         echo 'Executing command ' . $this->name . PHP_EOL;
 
         while( true ) {
-            if ( $this->socket->poll() ) {
-                $message = new Message( $this->readMessage() );
+            if ( \count( $this->messageBuffer ) || $this->socket->poll() ) {
+                $msg = $this->readMessage();
+                $message = new Message( $msg );
 
                 echo 'Command: ' .$message->getCommand() . ', Params: ' . \print_r( $message->getParams(), true );
                 echo \PHP_EOL . '---------------------------------------------------------' . \PHP_EOL;
@@ -44,19 +52,61 @@ class Listener extends PluginCommand {
     }
 
     private function readMessage() {
-        $message = '';
+        $count = \count( $this->messageBuffer );
 
-        while( strpos( $message, "\r\n" ) === false ) {
-            $result = $this->socket->read( 2048 );
-
-            if ( !is_null( $result ) && $result !== false ) {
-                $message .= $result;
-            }
-            else {
-                break;
+        if ( $count > 1 ) {
+            return \array_shift( $this->messageBuffer );
+        }
+        elseif ( $count == 1 ) {
+            if ( \strpos( $this->messageBuffer[ 0 ], "\r\n" ) ) {
+                return \array_shift( $this->messageBuffer );
             }
         }
+        
+        $this->socketRead();
+        return $this->readMessage();
+    }
 
-        return $message;
+    private function socketRead() {
+        $result = $this->socket->read( 512 );
+
+        $result = \preg_split( "/\r\n/", $result );
+        $count = \count( $result );
+
+        if ( $count ) {
+
+            // Prepare result for merging
+            if ( empty( $result[ $count - 1 ] ) ) {
+                \array_pop( $result );
+                foreach( $result as $key => $value ) {
+                    $result[ $key ] = ( $value . "\r\n" );
+                }
+            }
+            else {
+                for( $i = 0; $i < ( $count - 1 ); $i++ ) {
+                    $result[ $i ] = ( $result[ $i ] . "\r\n" );
+                }
+            }
+
+            // See if we have an incomplete result left over
+            if ( \count( $this->messageBuffer ) ) {
+                if ( !\strpos( $this->messageBuffer[ 0 ], "\r\n" ) ) {
+                    $this->messageBuffer[ 0 ] .= \array_shift( $result );
+                }
+
+                foreach( $result as $message ) {
+                    if ( !empty( $message ) ) {
+                        $this->messageBuffer[] = $message;
+                    }
+                }
+            }
+            else {
+                foreach( $result as $message ) {
+                    if ( !empty( $message ) ) {
+                        $this->messageBuffer[] = $message;
+                    }
+                }
+            }
+        }
     }
 }

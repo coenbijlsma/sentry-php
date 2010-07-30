@@ -142,7 +142,7 @@ class Socket {
      */
     public function read( $length = 1024 ) {
         $result = \socket_read( $this->socket, $length, \PHP_BINARY_READ );
-        if ( $result && strlen( $result ) == 0 ) {
+        if ( $result && \strlen( $result ) == 0 ) {
             return null;
         }
         return $result;
