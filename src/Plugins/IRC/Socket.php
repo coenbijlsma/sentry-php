@@ -95,7 +95,7 @@ class Socket {
         if ( $this->isConnected ) {
             \socket_close( $this->socket );
             $this->isConnected = false;
-            echo 'Disconnected.' . \PHP_EOL;
+            $this->logger->log( 'Disconnected', Logger::LEVEL_INFO );
         }
         return true;
     }
@@ -142,9 +142,10 @@ class Socket {
      */
     public function read( $length = 1024 ) {
         $result = \socket_read( $this->socket, $length, \PHP_BINARY_READ );
-        if ( $result && \strlen( $result ) == 0 ) {
+        if ( $result !== false && \strlen( $result ) == 0 ) {
             return null;
         }
+
         return $result;
     }
 
@@ -180,5 +181,12 @@ class Socket {
             return false;
         }
         return true;
+    }
+
+    /**
+     * @return SocketError
+     */
+    public function lastError() {
+        return new SocketError( \socket_last_error( $this->socket ) );
     }
 }

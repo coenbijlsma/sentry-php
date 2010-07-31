@@ -3,9 +3,12 @@ namespace Plugins\IRC\Commands;
 
 use Sentry\Plugin as Plugin;
 use Sentry\PluginCommand as PluginCommand;
+use Logging\LoggerFactory as LoggerFactory;
+use Logging\Logger as Logger;
 
 use Plugins\IRC\Socket as Socket;
 use Plugins\IRC\Message as Message;
+
 
 class Listener extends PluginCommand {
 
@@ -22,6 +25,12 @@ class Listener extends PluginCommand {
     private $messageBuffer;
 
     /**
+     *
+     * @var Logger
+     */
+    private $logger;
+
+    /**
      * Constructor
      * @param Plugin $plugin
      * @param array $config
@@ -29,6 +38,7 @@ class Listener extends PluginCommand {
      */
     public function __construct( Plugin &$plugin, array $config, Socket &$socket ) {
         parent::__construct( $plugin, $config );
+        $this->logger = LoggerFactory::getLogger( __CLASS__, LOGGER_TYPE );
         $this->socket =& $socket;
         $this->messageBuffer = array();
     }
@@ -37,20 +47,32 @@ class Listener extends PluginCommand {
      * Executes this Command.
      */
     public function execute() {
-        echo 'Executing command ' . $this->name . PHP_EOL;
+        echo 'Executing command ' . $this->name . \PHP_EOL;
 
-        while( true ) {
+        while( $this->socket->isConnected() ) {
             if ( \count( $this->messageBuffer ) || $this->socket->poll() ) {
                 $msg = $this->readMessage();
-                $message = new Message( $msg );
 
-                echo 'Command: ' .$message->getCommand() . ', Params: ' . \print_r( $message->getParams(), true );
-                echo \PHP_EOL . '---------------------------------------------------------' . \PHP_EOL;
+                if ( false === $msg || \is_null( $msg ) ) {
+                    $this->logger->log( $this->socket->lastError()->getDescription() );
+                    $this->socket->close();
+                    return;
+                }
+                else {
+                    $message = new Message( $msg );
+
+                    echo 'Command: ' .$message->getCommand() . ', Params: ' . \print_r( $message->getParams(), true );
+                    echo \PHP_EOL . '---------------------------------------------------------' . \PHP_EOL;
+                }
             }
-            \usleep( 100000 );
+            \usleep( 50000 );
         }
     }
 
+    /**
+     *
+     * @return string|bool
+     */
     private function readMessage() {
         $count = \count( $this->messageBuffer );
 
@@ -63,13 +85,23 @@ class Listener extends PluginCommand {
             }
         }
         
-        $this->socketRead();
-        return $this->readMessage();
+        if ( $this->socketRead() ) {
+            return $this->readMessage();
+        }
+        return false;
     }
 
+    /**
+     *
+     * @return string|bool
+     */
     private function socketRead() {
         $result = $this->socket->read( 512 );
 
+        if ( \is_null( $result ) || false === $result) {
+            return false;
+        }
+        
         $result = \preg_split( "/\r\n/", $result );
         $count = \count( $result );
 
@@ -108,5 +140,7 @@ class Listener extends PluginCommand {
                 }
             }
         }
+
+        return true;
     }
 }
