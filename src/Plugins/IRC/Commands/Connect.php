@@ -57,10 +57,11 @@ class Connect extends PluginCommand {
     }
 
     /**
+     * @param array $params
      * @throws IOException If an I/O error occurs during execution of
      * this command.
      */
-    public function execute() {
+    public function execute( array $params = array() ) {
         echo 'Executing command ' . $this->name . \PHP_EOL;
 
         if ( false === $this->socket->connect() ) {

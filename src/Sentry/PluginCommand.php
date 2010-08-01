@@ -71,7 +71,8 @@ abstract class PluginCommand {
 
     /**
      * Executes this command
+     * @param array $params
      */
-    public abstract function execute();
+    public abstract function execute( array $params = array() );
 
 }

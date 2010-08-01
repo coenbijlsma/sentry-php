@@ -20,7 +20,7 @@ class SocketError {
      * @param int $code
      */
     public function __construct( $code ) {
-        $this->code = code;
+        $this->code = $code;
         $this->description = \socket_strerror( $code );
     }
 

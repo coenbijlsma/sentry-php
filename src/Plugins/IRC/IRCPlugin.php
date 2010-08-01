@@ -8,6 +8,7 @@ use Sentry\HookPoint as HookPoint;
 use Plugins\IRC\Commands\Connect as Connect;
 use Plugins\IRC\Commands\TestCommand as TestCommand;
 use Plugins\IRC\Commands\Listener as Listener;
+use Plugins\IRC\Commands\MessageDispatcher as MessageDispatcher;
 
 class IRCPlugin extends Plugin {
 
@@ -77,9 +78,11 @@ class IRCPlugin extends Plugin {
     private function initCommands() {
         $connect = new Connect( $this, $this->config->getValue( 'commands', 'connect' ), $this->socket );
         $listener = new Listener( $this, $this->config->getValue( 'commands', 'listener', array() ), $this->socket );
+        $messagedispatcher = new MessageDispatcher( $this, $this->config->getValue( 'commands', 'messagedispatcher', array() ), $this->socket );
         
         $this->commands[ $connect->getName() ] = $connect;
         $this->commands[ $listener->getName() ] = $listener;
+        $this->commands[ $messagedispatcher->getName() ] = $messagedispatcher;
     }
 
     /**
@@ -91,15 +94,6 @@ class IRCPlugin extends Plugin {
                 $this->config->getValue(
                     'hookpoints',
                     'irc.post_connect.acl',
-                    array( '*' )
-                )
-        );
-
-        $this->hookpoints[ 'irc.pre_receive_message' ] = new HookPoint(
-                'irc.pre_receive_message',
-                $this->config->getValue(
-                    'hookpoints',
-                    'irc.pre_receive_message.acl',
                     array( '*' )
                 )
         );

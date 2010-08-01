@@ -6,7 +6,7 @@ final class Message {
 
     const MSG_PREFIX_IDENT = ':';
     const MSG_SPACE = ' ';
-    const MSG_CRLF = '\r\n';
+    const MSG_CRLF = "\r\n";
 
     /**
      *

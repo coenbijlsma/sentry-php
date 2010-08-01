@@ -62,10 +62,11 @@ class Executor {
     /**
      *
      * @param HookPoint $hookpoint
+     * @param array $params
      * @return bool
      * @throws
      */
-    public final function executeCommandsFrom( HookPoint $hookpoint ) {
+    public final function executeCommandsFrom( HookPoint $hookpoint, array $params = array() ) {
         if ( is_null( $hookpoint ) ) {
             return false;
         }
@@ -74,7 +75,7 @@ class Executor {
 
         foreach( $attachedCommands as $command ) {
             if ( $hookpoint->isAllowed( $command ) ) {
-                $command->execute();
+                $command->execute( $params );
             }
             else {
                 $this->logger->log( 'Command ' . $command->getPlugin()->getName() . '.' . $command->getName() . ' is not allowed for hookpoint ' . $hookpoint->getName(), Logger::LEVEL_WARNING );

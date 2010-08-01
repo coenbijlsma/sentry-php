@@ -8,6 +8,7 @@ use Logging\Logger as Logger;
 
 use Plugins\IRC\Socket as Socket;
 use Plugins\IRC\Message as Message;
+use Plugins\IRC\MessageDispatcher as MessageDispatcher;
 
 
 class Listener extends PluginCommand {
@@ -45,8 +46,10 @@ class Listener extends PluginCommand {
 
     /**
      * Executes this Command.
+     *
+     *  @param array $params
      */
-    public function execute() {
+    public function execute( array $params = array() ) {
         echo 'Executing command ' . $this->name . \PHP_EOL;
 
         while( $this->socket->isConnected() ) {
@@ -60,9 +63,12 @@ class Listener extends PluginCommand {
                 }
                 else {
                     $message = new Message( $msg );
-
-                    echo 'Command: ' .$message->getCommand() . ', Params: ' . \print_r( $message->getParams(), true );
-                    echo \PHP_EOL . '---------------------------------------------------------' . \PHP_EOL;
+                    $this->plugin->executeCommandsFrom(
+                        $this->plugin->getHookPointByName(
+                            'irc.post_receive_message'
+                        ),
+                        array( $message )
+                    );
                 }
             }
             \usleep( 50000 );

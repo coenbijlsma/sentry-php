@@ -19,7 +19,11 @@ class TestCommand extends PluginCommand {
         $this->socket =& $socket;
     }
 
-    public function execute() {
+    /**
+     *
+     * @param array $params 
+     */
+    public function execute( array $params = array() ) {
         echo 'Executing command ' . $this->name . PHP_EOL;
 
         if ( $this->socket->isConnected() ) {
