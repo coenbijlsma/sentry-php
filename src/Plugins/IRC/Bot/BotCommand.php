@@ -55,6 +55,17 @@ abstract class BotCommand {
     abstract function execute( Subject &$caller = null );
 
     /**
+     * @return array
+     */
+    abstract function getRequiredPermissions();
+
+    /**
+     * @param string $to
+     * @return array
+     */
+    abstract static function help( $to );
+
+    /**
      *
      * @param Message $message
      * @return BotCommand
@@ -67,6 +78,9 @@ abstract class BotCommand {
 
                 if ( \count( $params ) == 2 ) {
                     $from = $message->getPrefix();
+                    if ( !\is_null( $from ) ) {
+                        $from = $from->getServerOrNick();
+                    }
                     $saidto = $params[ 0 ];
                     $text = \explode( ' ', \trim( $params[ 1 ] ) );
 
@@ -101,6 +115,14 @@ abstract class BotCommand {
                 $sayParams[ 'message' ] = \implode( ' ', $params );
                 $say->setParams( $sayParams );
                 return $say;
+            case 'help':
+                $help = new Help( $bot );
+                $helpParams = array();
+                $helpParams[ 'from' ] = $from;
+                $helpParams[ 'to' ] = $from;
+                $helpParams[ 'message' ] = \implode( ' ', $params );
+                $help->setParams( $helpParams );
+                return $help;
             default:
                 return null;
         }

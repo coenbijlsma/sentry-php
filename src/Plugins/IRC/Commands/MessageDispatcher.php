@@ -69,7 +69,6 @@ class MessageDispatcher extends PluginCommand {
                 echo \PHP_EOL . '---------------------------------------------------------' . \PHP_EOL;
             }
             else {
-                echo 'Sending reply: ' . $reply . \PHP_EOL;
                 $this->socket->write( $reply );
             }
         }

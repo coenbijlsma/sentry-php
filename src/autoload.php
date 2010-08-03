@@ -23,5 +23,10 @@ function __autoload( $class ) {
             . str_replace( '_', DIRECTORY_SEPARATOR, $class_name )
             . '.php';
 
-    require_once( $full_path  );
+    if (file_exists( $full_path ) ) {
+        require_once( $full_path  );
+    }
+    else {
+        throw new Exception( 'Could not find file for class ' . $class );
+    }
 }
