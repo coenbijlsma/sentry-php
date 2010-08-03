@@ -67,10 +67,10 @@ final class Message {
             $space_pos = \strpos( $raw, self::MSG_SPACE );
 
             if ( false !== $space_pos ) {
-                $this->prefix = \substr( $raw, 1, $space_pos - 1 );
+                $this->prefix = new MessagePrefix( \substr( $raw, 1, $space_pos - 1 ) );
             }
             else {
-                $this->prefix = '';
+                $this->prefix = null;
             }
         }
 
@@ -140,7 +140,7 @@ final class Message {
 
     /**
      *
-     * @return string
+     * @return MessagePrefix
      */
     public function getPrefix() {
         return $this->prefix;

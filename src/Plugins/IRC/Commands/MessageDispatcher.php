@@ -7,6 +7,8 @@ use Logging\Logger as Logger;
 use Plugins\IRC\Socket as Socket;
 use Plugins\IRC\Message as Message;
 
+use Plugins\IRC\Bot\Bot as Bot;
+
 use Sentry\Plugin as Plugin;
 use Sentry\PluginCommand as PluginCommand;
 
@@ -47,17 +49,8 @@ class MessageDispatcher extends PluginCommand {
             }
         }
         else {
-            $this->logger->log( 'Could not send PONG message because I received no daemon name.', Logger::LEVEL_WARNING );
+            $this->logger->log( 'Could not send PONG response because I received no daemon name.', Logger::LEVEL_WARNING );
         }
-    }
-
-    /**
-     * Handles the PRIVMSG message
-     * @param Message $message
-     */
-    private function dispatchPrivmsgMessage( Message &$message ) {
-        $params = $message->getParams();
-        echo $message->getPrefix() . ' sais: ' . $params[ 1 ] . \PHP_EOL;
     }
 
     /**
@@ -65,16 +58,21 @@ class MessageDispatcher extends PluginCommand {
      * @param Message $message
      */
     public function dispatch( Message &$message ) {
-        switch( $message->getCommand() ) {
-            case 'PING':
-                $this->dispatchPingMessage( $message );
-                break;
-            case 'PRIVMSG':
-                $this->dispatchPrivmsgMessage( $message );
-                break;
+        if ( 'PING' === $message->getCommand() ) {
+            $this->dispatchPingMessage( $message );
         }
-        echo 'Command: ' .$message->getCommand() . ', Params: ' . \print_r( $message->getParams(), true );
-        echo \PHP_EOL . '---------------------------------------------------------' . \PHP_EOL;
+        else {
+            $reply = Bot::getInstance()->process( $message );
+            if ( \is_null( $reply ) ) {
+                echo 'Bot could not process message: ';
+                echo $message->getRaw();
+                echo \PHP_EOL . '---------------------------------------------------------' . \PHP_EOL;
+            }
+            else {
+                echo 'Sending reply: ' . $reply . \PHP_EOL;
+                $this->socket->write( $reply );
+            }
+        }
     }
 
     /**
