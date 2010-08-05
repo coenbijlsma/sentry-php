@@ -6,6 +6,10 @@ use Plugins\IRC\Message as Message;
 
 class Help extends BotCommand {
 
+    /**
+     * Constructor
+     * @param Bot $bot
+     */
     public function __construct( Bot &$bot ) {
         parent::__construct( $bot, 'help' );
     }
@@ -16,12 +20,12 @@ class Help extends BotCommand {
     public function  execute( Subject &$caller = null ) {
 
         $help_class = \ucfirst( $this->params[ 'message' ] );
-        $help_class = 'Plugins\\IRC\\Bot\\' . $help_class;
+        $help_class = __NAMESPACE__ . '\\' . $help_class;
 
         try {
             if (\class_exists( $help_class, true ) ) {
 
-                if ( \is_subclass_of( $help_class, 'Plugins\\IRC\\Bot\\BotCommand' ) ) {
+                if ( \is_subclass_of( $help_class, __NAMESPACE__ . '\\BotCommand' ) ) {
                     $help_response = $help_class::help( $this->params[ 'to' ] );
                     return $help_response[ 0 ];
                 }

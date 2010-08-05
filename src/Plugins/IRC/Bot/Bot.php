@@ -61,6 +61,11 @@ class Bot {
         return null;
     }
 
+    /**
+     * Returns whether the given message contains a bot command.
+     * @param Message $message
+     * @return bool
+     */
     public function containsBotCommand( Message &$message ) {
         $params = $message->getParams();
         if ( \count( $params ) == 2 ) {
